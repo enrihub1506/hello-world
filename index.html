@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Reportes de Perforación</title>
+    <style>
+        :root {
+            --primary-color: #003366; /* Azul oscuro */
+            --secondary-color: #0055a4; /* Azul medio */
+            --accent-color: #fdb913; /* Amarillo/Dorado */
+            --light-gray: #f4f4f4;
+            --dark-gray: #333;
+            --border-color: #ddd;
+            --error-color: #d9534f;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+            line-height: 1.6;
+        }
+
+        h2, h3, h4 {
+            color: var(--primary-color);
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="date"],
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: var(--primary-color);
+        }
+
+        /* --- Vistas Principales --- */
+        #login-view {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #app-view header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #app-view header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        #app-view main {
+            padding: 1rem;
+        }
+
+        section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        /* --- Formulario --- */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .signatures-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        #approve-report-button {
+            background-color: #28a745; /* Verde */
+        }
+        #approve-report-button:hover {
+            background-color: #218838;
+        }
+
+        /* --- Tablas --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: var(--light-gray);
+        }
+
+        table input {
+            margin: 0;
+        }
+
+        /* --- Responsividad --- */
+        @media (max-width: 768px) {
+            .form-grid, .signatures-grid {
+                grid-template-columns: 1fr;
+            }
+            #app-view header {
+                flex-direction: column;
+                text-align: center;
+            }
+            #user-info {
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Vista de Inicio de Sesión -->
+    <div id="login-view">
+        <h2>Iniciar Sesión</h2>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Usuario:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Entrar</button>
+            <p id="login-error" class="error-message" style="display: none;">Usuario o contraseña incorrectos.</p>
+        </form>
+    </div>
+
+    <!-- Vista Principal de la Aplicación (oculta por defecto) -->
+    <div id="app-view" style="display: none;">
+        <header>
+            <h1>Reportes de Perforación</h1>
+            <div id="user-info">
+                <span id="welcome-message"></span>
+                <button id="logout-button">Cerrar Sesión</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Vista del Dashboard -->
+            <section id="dashboard-view">
+                <h2>Dashboard</h2>
+                <div id="kpi-container">
+                    <!-- Los KPIs se generarán aquí con JS -->
+                </div>
+                <button id="new-report-button">Iniciar Nuevo Reporte</button>
+            </section>
+
+            <!-- Vista de la Lista de Reportes -->
+            <section id="reports-list-view">
+                <h3>Mis Reportes</h3>
+                <div id="reports-table-container">
+                    <!-- La tabla de reportes se generará aquí con JS -->
+                </div>
+            </section>
+
+            <!-- Vista del Formulario del Reporte (oculto por defecto) -->
+            <section id="report-form-view" style="display: none;">
+                <h2>Reporte Diario de Servicio</h2>
+                <form id="report-form">
+                    <!-- Encabezado del Reporte -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="report-no">REPORTE N˚:</label>
+                            <input type="text" id="report-no">
+                        </div>
+                        <div class="form-group">
+                            <label for="prepared-by">PREPARADO POR:</label>
+                            <input type="text" id="prepared-by">
+                        </div>
+                        <div class="form-group">
+                            <label for="revision">REVISION:</label>
+                            <input type="text" id="revision">
+                        </div>
+                        <div class="form-group">
+                            <label for="reviewed-by">REVISADO POR:</label>
+                            <input type="text" id="reviewed-by">
+                        </div>
+                        <div class="form-group">
+                            <label for="rev-date">FECHA REV:</label>
+                            <input type="date" id="rev-date">
+                        </div>
+                        <div class="form-group">
+                            <label for="approved-by">APROBADO POR:</label>
+                            <input type="text" id="approved-by">
+                        </div>
+                        <div class="form-group">
+                            <label for="contract-no">CONTRATO N˚:</label>
+                            <input type="text" id="contract-no">
+                        </div>
+                        <div class="form-group">
+                            <label for="fiscal-address">DIRECCION FISCAL:</label>
+                            <input type="text" id="fiscal-address">
+                        </div>
+                    </div>
+
+                    <!-- Información Principal -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="report-date">FECHA:</label>
+                            <input type="date" id="report-date">
+                        </div>
+                        <div class="form-group">
+                            <label for="service-team-no">N˚ DE EQUIPO DE SERVICIO:</label>
+                            <input type="text" id="service-team-no">
+                        </div>
+                        <div class="form-group">
+                            <label for="work-category">CATEGORIA DE TRABAJO:</label>
+                            <input type="text" id="work-category">
+                        </div>
+                        <div class="form-group">
+                            <label for="client-company">EMPRESA O CLIENTE:</label>
+                            <input type="text" id="client-company">
+                        </div>
+                        <div class="form-group">
+                            <label for="location">MACOLLA / CLUSTER/ LOCACIÓN:</label>
+                            <input type="text" id="location">
+                        </div>
+                        <div class="form-group">
+                            <label for="well">POZO:</label>
+                            <input type="text" id="well">
+                        </div>
+                        <div class="form-group">
+                            <label for="field">CAMPO:</label>
+                            <input type="text" id="field">
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Actividades -->
+                    <h4>Descripción del Trabajo por Actividad</h4>
+                    <table id="activity-log-table">
+                        <thead>
+                            <tr>
+                                <th>CODIGO</th>
+                                <th>HRS DESDE</th>
+                                <th>HRS HASTA</th>
+                                <th>HRS TOTAL</th>
+                                <th>DESCRIPCIÓN TRABAJO</th>
+                                <th>ACCIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activity-log-body">
+                            <!-- Filas de actividad se añadirán aquí con JS -->
+                        </tbody>
+                    </table>
+                    <button type="button" id="add-activity-row">Añadir Actividad</button>
+
+                    <!-- Tabla de Resumen de Tiempo -->
+                    <h4>Resumen de Tiempo</h4>
+                    <table id="time-summary-table">
+                        <thead>
+                            <tr>
+                                <th>CODIGO</th>
+                                <th>TIEMPO</th>
+                                <th>TOTAL HORAS</th>
+                                <th>OBSERVACIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>A</td>
+                                <td>OPERATIVO</td>
+                                <td><input type="number" step="0.1" class="time-summary-input" data-code="A"></td>
+                                <td><input type="text" class="time-summary-obs" data-code="A"></td>
+                            </tr>
+                            <tr>
+                                <td>B</td>
+                                <td>STAND BY POR CLIENTE</td>
+                                <td><input type="number" step="0.1" class="time-summary-input" data-code="B"></td>
+                                <td><input type="text" class="time-summary-obs" data-code="B"></td>
+                            </tr>
+                            <tr>
+                                <td>C</td>
+                                <td>FUERZA MAYOR</td>
+                                <td><input type="number" step="0.1" class="time-summary-input" data-code="C"></td>
+                                <td><input type="text" class="time-summary-obs" data-code="C"></td>
+                            </tr>
+                            <tr>
+                                <td>D</td>
+                                <td>MUDANZA</td>
+                                <td><input type="number" step="0.1" class="time-summary-input" data-code="D"></td>
+                                <td><input type="text" class="time-summary-obs" data-code="D"></td>
+                            </tr>
+                             <tr>
+                                <td>E</td>
+                                <td>MUDANZA POZO A POZO</td>
+                                <td><input type="number" step="0.1" class="time-summary-input" data-code="E" value="0"></td>
+                                <td><input type="text" class="time-summary-obs" data-code="E"></td>
+                            </tr>
+                            <tr>
+                                <td>F</td>
+                                <td>DOWN TIME</td>
+                                <td><input type="number" step="0.1" class="time-summary-input" data-code="F"></td>
+                                <td><input type="text" class="time-summary-obs" data-code="F"></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="2">TOTAL HORAS</td>
+                                <td id="total-hours-summary">24.0</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <!-- Personal Responsable -->
+                    <h4>Personal Responsable en Operaciones Diarias</h4>
+                    <table id="personnel-table">
+                        <thead>
+                            <tr>
+                                <th>NOMBRE DEL TRABAJADOR</th>
+                                <th>NÚMERO CÉDULA DE IDENTIDAD</th>
+                                <th>CLASIFICACIÓN DE CARGO</th>
+                                <th>ACCIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="personnel-body">
+                            <!-- Filas de personal se añadirán aquí con JS -->
+                        </tbody>
+                    </table>
+                    <button type="button" id="add-personnel-row">Añadir Persona</button>
+
+                    <!-- Equipos y Repuestos -->
+                    <h4>Equipos y Repuestos Utilizados en Operaciones</h4>
+                    <table id="equipment-table">
+                        <thead>
+                            <tr>
+                                <th>EQUIPO Y/O HERRAMIENTAS UTILIZADOS</th>
+                                <th>DESCRIPCIÓN DE LA ACTIVIDAD</th>
+                                <th>TOTAL HORAS</th>
+                                <th>ACCIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="equipment-body">
+                            <!-- Filas de equipos se añadirán aquí con JS -->
+                        </tbody>
+                    </table>
+                    <button type="button" id="add-equipment-row">Añadir Equipo</button>
+
+                    <!-- Firmas -->
+                    <div class="signatures-grid">
+                        <div class="signature-box">
+                            <h4>RESPONSABLE POR EMPRESA</h4>
+                            <div class="form-group">
+                                <label for="company-responsible-name">NOMBRE Y APELLIDO:</label>
+                                <input type="text" id="company-responsible-name">
+                            </div>
+                            <div class="form-group">
+                                <label for="company-responsible-id">NÚMERO CÉDULA:</label>
+                                <input type="text" id="company-responsible-id">
+                            </div>
+                            <p>FIRMA Y SELLO DE LA EMPRESA</p>
+                        </div>
+                        <div class="signature-box">
+                            <h4>APROBADO POR CLIENTE</h4>
+                            <div class="form-group">
+                                <label for="client-approver-name">NOMBRE Y APELLIDO:</label>
+                                <input type="text" id="client-approver-name">
+                            </div>
+                             <div class="form-group">
+                                <label for="client-approver-id">NÚMERO CÉDULA:</label>
+                                <input type="text" id="client-approver-id">
+                            </div>
+                            <p>FIRMA Y SELLO UNIDAD CONTRATANTE</p>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción del Formulario -->
+                    <div class="form-actions">
+                        <button type="button" id="save-draft-button">Guardar Borrador</button>
+                        <button type="button" id="submit-report-button">Someter Reporte</button>
+                        <button type="button" id="approve-report-button" style="display: none;">Aprobar Reporte</button>
+                        <button type="button" id="cancel-edit-button">Cancelar</button>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 1. REFERENCIAS A ELEMENTOS DEL DOM ---
+            const loginView = document.getElementById('login-view');
+            const appView = document.getElementById('app-view');
+            const dashboardView = document.getElementById('dashboard-view');
+            const reportFormView = document.getElementById('report-form-view');
+            const reportsListView = document.getElementById('reports-list-view');
+            const loginForm = document.getElementById('login-form');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const loginError = document.getElementById('login-error');
+            const welcomeMessage = document.getElementById('welcome-message');
+            const logoutButton = document.getElementById('logout-button');
+            const newReportButton = document.getElementById('new-report-button');
+            const cancelEditButton = document.getElementById('cancel-edit-button');
+            const approveReportButton = document.getElementById('approve-report-button');
+            const reportForm = document.getElementById('report-form');
+            const saveDraftButton = document.getElementById('save-draft-button');
+            const submitReportButton = document.getElementById('submit-report-button');
+            const addActivityRowBtn = document.getElementById('add-activity-row');
+            const addPersonnelRowBtn = document.getElementById('add-personnel-row');
+            const addEquipmentRowBtn = document.getElementById('add-equipment-row');
+            const reportsTableContainer = document.getElementById('reports-table-container');
+            const kpiContainer = document.getElementById('kpi-container');
+
+            // --- 2. DATOS Y ESTADO DE LA APLICACIÓN ---
+            const users = { 'supervisor': { password: '123', role: 'supervisor' }, 'gerente': { password: '456', role: 'manager' } };
+            let state = { currentUser: null, currentView: 'login', editingReportId: null };
+            let reports = [];
+
+            // --- 3. LÓGICA DE DATOS Y ALMACENAMIENTO ---
+            const getReportsFromStorage = () => JSON.parse(localStorage.getItem('drillingReports') || '[]');
+            const saveReportsToStorage = () => localStorage.setItem('drillingReports', JSON.stringify(reports));
+
+            function generateMockData() {
+                let mockReports = [];
+                for (let i = 15; i > 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    const reportDate = date.toISOString().split('T')[0];
+                    mockReports.push({
+                        id: `rep-${Date.now() + i}`, status: i < 5 ? 'Submitted' : (i < 10 ? 'Draft' : 'Approved'),
+                        'report-no': `RPT-0${i}`, 'prepared-by': 'Supervisor Demo', 'revision': 'A',
+                        'reviewed-by': i < 10 ? '' : 'Gerente Demo', 'rev-date': reportDate, 'approved-by': i < 10 ? '' : 'Gerente Demo',
+                        'contract-no': 'CTR-2024-01', 'fiscal-address': 'Dirección Fiscal Ejemplo', 'report-date': reportDate,
+                        'service-team-no': `EQ-0${(i % 3) + 1}`, 'work-category': 'Perforación', 'client-company': 'Cliente Ejemplo',
+                        'location': `Cluster ${(i % 4) + 1}`, 'well': `Pozo-XY${100 + i}`, 'field': 'Campo Principal',
+                        'time-summary': {
+                            A: { hours: 16, obs: 'Operación normal.' }, B: { hours: 2, obs: 'Esperando por cliente.' },
+                            C: { hours: 0, obs: '' }, D: { hours: 0, obs: '' }, E: { hours: 0, obs: '' },
+                            F: { hours: i % 4 === 0 ? 6 : 0, obs: i % 4 === 0 ? 'Falla en bomba.' : '' }
+                        },
+                        activities: [{ code: 'A-1', from: '08:00', to: '16:00', total: 8, desc: 'Perforando sección inicial' }],
+                        personnel: [{ name: 'Juan Perez', id: 'V12345678', role: 'Jefe de Taladro' }],
+                        equipment: [{ name: 'Bomba de lodo', desc: 'Operación normal', hours: 24 }],
+                        'company-responsible-name': 'Supervisor Demo', 'company-responsible-id': 'V87654321',
+                        'client-approver-name': i < 10 ? '' : 'Gerente Demo', 'client-approver-id': i < 10 ? '' : 'V11223344'
+                    });
+                }
+                reports = mockReports;
+                saveReportsToStorage();
+            }
+
+            // --- 4. LÓGICA DEL DASHBOARD ---
+            const getWeekNumber = (d) => {
+                d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+                var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            };
+
+            function calculateKPIs(reportSet) {
+                return reportSet.reduce((acc, report) => {
+                    const downtimeHours = report['time-summary']?.F?.hours || 0;
+                    if (downtimeHours > 0) {
+                        acc.downtime += downtimeHours;
+                        acc.incidents++;
+                    }
+                    return acc;
+                }, { downtime: 0, incidents: 0 });
+            }
+
+            function renderDashboard() {
+                const now = new Date();
+                const todayStr = now.toISOString().split('T')[0];
+                const yesterday = new Date();
+                yesterday.setDate(now.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+                const currentWeek = getWeekNumber(now);
+                const currentYear = now.getFullYear();
+
+                const lastDayReports = reports.filter(r => r['report-date'] === yesterdayStr);
+                const currentWeekReports = reports.filter(r => getWeekNumber(new Date(r['report-date'])) === currentWeek && new Date(r['report-date']).getFullYear() === currentYear);
+                const prevWeekReports = reports.filter(r => getWeekNumber(new Date(r['report-date'])) === currentWeek - 1 && new Date(r['report-date']).getFullYear() === currentYear);
+
+                const kpisLastDay = calculateKPIs(lastDayReports);
+                const kpisCurrentWeek = calculateKPIs(currentWeekReports);
+                const kpisPrevWeek = calculateKPIs(prevWeekReports);
+
+                kpiContainer.innerHTML = `
+                    <div class="kpi-grid">
+                        <div class="kpi-card"><h4>Último Día (${yesterdayStr})</h4><p>${kpisLastDay.downtime.toFixed(1)} hrs downtime</p><p>${kpisLastDay.incidents} incidentes</p></div>
+                        <div class="kpi-card"><h4>Semana Actual (acum.)</h4><p>${kpisCurrentWeek.downtime.toFixed(1)} hrs downtime</p><p>${kpisCurrentWeek.incidents} incidentes</p></div>
+                        <div class="kpi-card"><h4>Semana Anterior (acum.)</h4><p>${kpisPrevWeek.downtime.toFixed(1)} hrs downtime</p><p>${kpisPrevWeek.incidents} incidentes</p></div>
+                    </div>`;
+            }
+
+            // Agregando estilos para el dashboard
+            const styleSheet = document.styleSheets[0];
+            styleSheet.insertRule('.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }', styleSheet.cssRules.length);
+            styleSheet.insertRule('.kpi-card { background: var(--light-gray); border-left: 5px solid var(--accent-color); padding: 15px; border-radius: 4px; }', styleSheet.cssRules.length);
+            styleSheet.insertRule('.kpi-card h4 { margin-top: 0; }', styleSheet.cssRules.length);
+
+
+            // --- 5. LÓGICA DEL FORMULARIO ---
+            function collectFormData() {
+                let reportData = {};
+                reportForm.querySelectorAll('input[id], textarea[id]').forEach(input => { if (input.id) reportData[input.id] = input.value; });
+                reportData['time-summary'] = {};
+                document.querySelectorAll('.time-summary-input').forEach(i => { const c = i.dataset.code; if (!reportData['time-summary'][c]) reportData['time-summary'][c] = {}; reportData['time-summary'][c].hours = parseFloat(i.value) || 0; });
+                document.querySelectorAll('.time-summary-obs').forEach(i => { const c = i.dataset.code; if (!reportData['time-summary'][c]) reportData['time-summary'][c] = {}; reportData['time-summary'][c].obs = i.value; });
+                const getTableData = (tbodyId) => Array.from(document.getElementById(tbodyId).rows).map(row => { let d = {}; row.querySelectorAll('input, select').forEach(i => d[i.name] = i.value); return d; });
+                reportData.activities = getTableData('activity-log-body');
+                reportData.personnel = getTableData('personnel-body');
+                reportData.equipment = getTableData('equipment-body');
+                return reportData;
+            }
+
+            function populateForm(reportId) {
+                const report = reports.find(r => r.id === reportId);
+                if (!report) return;
+                resetForm();
+                state.editingReportId = reportId;
+                reportForm.querySelectorAll('input[id], textarea[id]').forEach(i => { if (i.id && report[i.id]) i.value = report[i.id]; });
+                if (report['time-summary']) Object.keys(report['time-summary']).forEach(code => {
+                    const item = report['time-summary'][code];
+                    const h = document.querySelector(`.time-summary-input[data-code="${code}"]`), o = document.querySelector(`.time-summary-obs[data-code="${code}"]`);
+                    if (h) h.value = item.hours; if (o) o.value = item.obs;
+                });
+                if (report.activities) report.activities.forEach(item => addActivityRow(item));
+                if (report.personnel) report.personnel.forEach(item => addPersonnelRow(item));
+                if (report.equipment) report.equipment.forEach(item => addEquipmentRow(item));
+                state.currentView = 'form';
+                renderView();
+            }
+
+            function resetForm() {
+                reportForm.reset();
+                ['activity-log-body', 'personnel-body', 'equipment-body'].forEach(id => document.getElementById(id).innerHTML = '');
+                state.editingReportId = null;
+            }
+
+            // --- 6. LÓGICA DE TABLAS DINÁMICAS ---
+            const createDeleteButton = (row) => { const btn = document.createElement('button'); btn.textContent = 'X'; btn.type = 'button'; btn.className = 'delete-row-btn'; btn.onclick = () => row.remove(); return btn; };
+            function addActivityRow(data = {}) { const r = document.getElementById('activity-log-body').insertRow(); r.innerHTML = `<td><input type="text" name="code" value="${data.code || ''}"></td><td><input type="time" name="from" value="${data.from || ''}"></td><td><input type="time" name="to" value="${data.to || ''}"></td><td><input type="number" name="total" step="0.1" value="${data.total || 0}"></td><td><input type="text" name="desc" value="${data.desc || ''}"></td>`; const c = r.insertCell(); c.appendChild(createDeleteButton(r));}
+            function addPersonnelRow(data = {}) { const r = document.getElementById('personnel-body').insertRow(); r.innerHTML = `<td><input type="text" name="name" value="${data.name || ''}"></td><td><input type="text" name="id" value="${data.id || ''}"></td><td><input type="text" name="role" value="${data.role || ''}"></td>`; const c = r.insertCell(); c.appendChild(createDeleteButton(r));}
+            function addEquipmentRow(data = {}) { const r = document.getElementById('equipment-body').insertRow(); r.innerHTML = `<td><input type="text" name="name" value="${data.name || ''}"></td><td><input type="text" name="desc" value="${data.desc || ''}"></td><td><input type="number" name="hours" step="0.1" value="${data.hours || 0}"></td>`; const c = r.insertCell(); c.appendChild(createDeleteButton(r));}
+
+            // --- 7. LÓGICA DE GESTIÓN DE REPORTES ---
+            function renderReportsList() {
+                const user = state.currentUser;
+                const filtered = reports.filter(r => user.role === 'supervisor' || (user.role === 'manager' && (r.status === 'Submitted' || r.status === 'Approved'))).sort((a, b) => new Date(b['report-date']) - new Date(a['report-date']));
+                if (filtered.length === 0) { reportsTableContainer.innerHTML = '<p>No hay reportes para mostrar.</p>'; return; }
+                const table = document.createElement('table');
+                table.innerHTML = `<thead><tr><th>Fecha</th><th>Reporte N°</th><th>Pozo</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody>${filtered.map(r => `<tr><td>${r['report-date']}</td><td>${r['report-no']}</td><td>${r.well}</td><td>${r.status}</td>
+                    <td><button class="view-edit-btn" data-id="${r.id}">Ver / Editar</button></td></tr>`).join('')}</tbody>`;
+                reportsTableContainer.innerHTML = '';
+                reportsTableContainer.appendChild(table);
+            }
+
+            function handleSaveReport(status) {
+                const reportData = collectFormData();
+                if (state.editingReportId) {
+                    const index = reports.findIndex(r => r.id === state.editingReportId);
+                    reports[index] = { ...reports[index], ...reportData, status };
+                } else {
+                    reports.unshift({ ...reportData, id: `rep-${Date.now()}`, status });
+                }
+                saveReportsToStorage();
+                state.currentView = 'dashboard';
+                renderView();
+            }
+
+            function handleApproveReport() {
+                if (state.editingReportId && state.currentUser.role === 'manager') {
+                    const report = reports.find(r => r.id === state.editingReportId);
+                    if (report.status === 'Submitted') {
+                        report.status = 'Approved';
+                        report['approved-by'] = state.currentUser.username;
+                        report['client-approver-name'] = state.currentUser.username;
+                        saveReportsToStorage();
+                        state.currentView = 'dashboard';
+                        renderView();
+                    }
+                }
+            }
+
+            // --- 8. LÓGICA DE NAVEGACIÓN Y VISTAS ---
+            function renderView() {
+                [loginView, appView, dashboardView, reportFormView, reportsListView].forEach(v => v.style.display = 'none');
+                if (state.currentView === 'login') loginView.style.display = 'block';
+                else if (state.currentView === 'dashboard') {
+                    appView.style.display = 'block';
+                    dashboardView.style.display = 'block';
+                    reportsListView.style.display = 'block';
+                    renderReportsList();
+                    renderDashboard();
+                } else if (state.currentView === 'form') {
+                    appView.style.display = 'block';
+                    reportFormView.style.display = 'block';
+                }
+
+                if (state.currentUser) {
+                    welcomeMessage.textContent = `Bienvenido, ${state.currentUser.username} (${state.currentUser.role})`;
+                    const isManager = state.currentUser.role === 'manager', isSupervisor = state.currentUser.role === 'supervisor';
+                    const report = reports.find(r => r.id === state.editingReportId);
+                    const formIsEditable = isSupervisor || (isManager && report && report.status === 'Submitted');
+
+                    approveReportButton.style.display = isManager && report && report.status === 'Submitted' ? 'inline-block' : 'none';
+                    [newReportButton, saveDraftButton, submitReportButton].forEach(b => b.style.display = isSupervisor ? 'inline-block' : 'none');
+                    reportForm.querySelectorAll('input, button, select, textarea').forEach(el => {
+                        if (!['approve-report-button', 'cancel-edit-button'].includes(el.id)) el.disabled = !formIsEditable;
+                    });
+                }
+            }
+
+            // --- 9. LÓGICA DE AUTENTICACIÓN ---
+            function handleLogin(e) {
+                e.preventDefault();
+                const user = users[usernameInput.value.trim()];
+                if (user && user.password === passwordInput.value.trim()) {
+                    state.currentUser = { username: usernameInput.value.trim(), role: user.role };
+                    sessionStorage.setItem('currentUser', JSON.stringify(state.currentUser));
+                    loginError.style.display = 'none';
+                    loginForm.reset();
+                    init();
+                } else {
+                    loginError.style.display = 'block';
+                }
+            }
+            function handleLogout() {
+                state.currentUser = null;
+                sessionStorage.removeItem('currentUser');
+                state.currentView = 'login';
+                reports = [];
+                renderView();
+            }
+            function checkSession() {
+                const savedUser = sessionStorage.getItem('currentUser');
+                if (savedUser) {
+                    state.currentUser = JSON.parse(savedUser);
+                    return true;
+                }
+                return false;
+            }
+
+            // --- 10. MANEJADORES DE EVENTOS ---
+            loginForm.addEventListener('submit', handleLogin);
+            logoutButton.addEventListener('click', handleLogout);
+            newReportButton.addEventListener('click', () => { resetForm(); state.currentView = 'form'; renderView(); addActivityRow(); addPersonnelRow(); addEquipmentRow(); });
+            cancelEditButton.addEventListener('click', () => { resetForm(); state.currentView = 'dashboard'; renderView(); });
+            saveDraftButton.addEventListener('click', () => handleSaveReport('Draft'));
+            submitReportButton.addEventListener('click', () => handleSaveReport('Submitted'));
+            approveReportButton.addEventListener('click', handleApproveReport);
+            addActivityRowBtn.addEventListener('click', () => addActivityRow());
+            addPersonnelRowBtn.addEventListener('click', () => addPersonnelRow());
+            addEquipmentRowBtn.addEventListener('click', () => addEquipmentRow());
+            reportsTableContainer.addEventListener('click', (e) => { if (e.target.classList.contains('view-edit-btn')) populateForm(e.target.dataset.id); });
+
+            // --- 11. INICIALIZACIÓN ---
+            function init() {
+                if (checkSession()) {
+                    reports = getReportsFromStorage();
+                    if (reports.length === 0) generateMockData();
+                    state.currentView = 'dashboard';
+                } else {
+                    state.currentView = 'login';
+                }
+                renderView();
+            }
+            init();
+        });
+    </script>
+</body>
+</html>
